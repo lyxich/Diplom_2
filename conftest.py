@@ -1,34 +1,27 @@
 import pytest
-import requests
+from data.user_data import generate_unique_user
+from utils.api_client import ApiClient
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def auth_token():
-    email = "testuser@example.com"
-    password = "password"
-    name = "Test User"
+    user = generate_unique_user()
+    api = ApiClient()
 
-    # Регистрация пользователя (если ещё не зарегистрирован)
-    register_response = requests.post(
-        "https://stellarburgers.nomoreparties.site/api/auth/register",
-        json={"email": email, "password": password, "name": name},
-        timeout=10
-    )
-
-    if register_response.status_code == 403:
-        pass  # Пользователь уже существует
-    else:
-        assert register_response.status_code == 200
+    # Регистрация
+    register_response = api.register_user(user["email"], user["password"], user["name"])
+    if register_response.status_code not in [200, 201]:
+        raise RuntimeError(f"User registration failed: {register_response.text}")
 
     # Авторизация
-    login_response = requests.post(
-        "https://stellarburgers.nomoreparties.site/api/auth/login",
-        json={"email": email, "password": password},
-        timeout=10
-    )
-    assert login_response.status_code == 200
+    login_response = api.login_user(user["email"], user["password"])
+    if login_response.status_code != 200:
+        raise RuntimeError(f"Login failed: {login_response.text}")
+    token = login_response.json()["accessToken"]
 
-    token = login_response.json().get("accessToken")
-    assert token is not None
+    yield token
 
-    yield token  # Возвращаем строку токена
+    # Удаление после теста
+    delete_response = api.delete_user(token)
+    if delete_response.status_code not in [200, 202]:
+        raise RuntimeError(f"User deletion failed: {delete_response.text}")
