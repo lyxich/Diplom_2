@@ -1,0 +1,5 @@
+ORDER_URL = "https://stellarburgers.nomoreparties.site/api/orders "
+REGISTER_URL = "https://stellarburgers.nomoreparties.site/api/auth/register "
+LOGIN_URL = "https://stellarburgers.nomoreparties.site/api/auth/login "
+ORDERS_URL = "https://stellarburgers.nomoreparties.site/api/orders "
+UPDATE_URL = "https://stellarburgers.nomoreparties.site/api/auth/user "
